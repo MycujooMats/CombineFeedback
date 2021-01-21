@@ -193,7 +193,8 @@ extension Feedback {
         value: KeyPath<GlobalState, State>,
         event: CasePath<GlobalEvent, Event>
     ) -> Feedback<GlobalState, GlobalEvent> {
-        return .custom { (state, consumer) -> Cancellable in
+        return .custom { [weak value] (state, consumer) -> Cancellable in
+            guard let value = value else { return C() }
             let state = state.map {
                 return ($0[keyPath: value], $1.flatMap(event.extract(from:)))
             }.eraseToAnyPublisher()
@@ -227,4 +228,8 @@ extension Array: Cancellable where Element == Cancellable {
             element.cancel()
         }
     }
+}
+
+fileprivate struct C: Cancellable {
+    func cancel() {}
 }
